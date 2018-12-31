@@ -101,6 +101,7 @@
     border:1px solid #909092;
     margin-right: 15px;
     margin-left: 15px;
+    overflow: auto;
 }
 
 .input_container {
