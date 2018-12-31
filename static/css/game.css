@@ -1,0 +1,128 @@
+.split {
+  height: 100%;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  overflow-x: hidden;
+}
+
+.left {
+  left: 0;
+  width: 30%;
+  background-color: #8c8c8e;
+}
+
+.right {
+  right: 0;
+  width: 70%;
+  background-color: #faffc9;
+}
+
+
+.title {
+    background-color: #404046;
+    margin-top: 0;
+    padding: 20px 20px 20px 20px;
+    color: #ffffff;
+    font-size: 36pt;
+    font-family: "Comic Sans MS";
+    text-align: center;
+    text-decoration: none;
+}
+
+.board {
+
+}
+
+.fleet {
+    margin-top: 0;
+    color: #ffffff;
+    font-size: 12pt;
+    font-family: "Comic Sans MS";
+    text-align: center;
+}
+
+.field {
+  float: left;
+  height: 20px;
+  width: 20px;
+  border: 1px solid #984c00;
+  display:flex;
+  align-items: center;
+  justify-content:center;
+  color: white;
+}
+
+.clear {
+  clear: both;
+  float: left;
+}
+
+.sea {
+  background: #0439ff;
+}
+
+.team1 {
+  background: #00ff2c;
+}
+.team2 {
+  background: #ff0004;
+}
+
+.team3 {
+  background: #ff00e7;
+}
+
+.team4 {
+  background: #ff8100;
+}
+
+
+#wrapper {
+    text-align:center;
+    margin:0 auto;
+    padding-bottom:25px;
+    background: #404046;
+    width:550px;
+    margin-top:50px;
+    border:1px solid #000000;
+}
+
+#chatbox {
+    text-align:left;
+    margin:0 auto;
+    margin-top:15px;
+    margin-bottom:25px;
+    color: #ffffff;
+    background: #000000;
+    height:250px;
+    display:flex;
+    flex-direction:row;
+    border:1px solid #909092;
+    margin-right: 15px;
+    margin-left: 15px;
+}
+
+.input_container {
+    margin-right: 15px;
+    margin-left: 15px;
+    text-align:center;
+    display:flex;
+    flex-direction:row;
+    border:1px solid #909092;
+}
+
+.input {
+    flex: 1;
+}
+
+.error {
+    color: #ff0000;
+}
+
+.status {
+    margin-top:10px;
+    float: inside;
+    color: white;
+}
+

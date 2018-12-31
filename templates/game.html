@@ -1,0 +1,40 @@
+<!-- templates/home.html -->
+
+{% block content %}
+
+{% load static %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.min.js"></script>
+<script src="{% static 'javascripts/join_game.js' %}"></script>
+<link rel="stylesheet" href="{% static 'css/game.css' %}">
+
+<script type="text/javascript">
+    var user_id = "{{user.id}}";
+</script>
+
+
+{% if user.is_authenticated %}
+    <div id="game_board" class="split right">
+            <div id="board" class="board">
+            </div>
+    </div>
+    <div id="game_command" class="split left">
+        <div id="game_title" class="title"></div>
+        <div id="game_fleet" class="fleet"></div>
+        <div id="game_messenger">
+            <div id="wrapper">
+                <div id="title">
+                    <p class="status">Welcome!<b></b></p>
+                    <div style="clear:both"></div>
+                </div>
+                <div id="chatbox"></div>
+                <div class="input_container">
+                     <input type = "text" id = "user_input" class="input" placeholder="Type commands.."/>
+                </div>
+            </div>
+        </div>
+    </div>
+{% else %}
+  <p>log in to play a game.</p>
+  <a href="{% url 'login' %}">login</a>
+{% endif %}
+{% endblock %}

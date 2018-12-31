@@ -1,0 +1,25 @@
+<!-- templates/home.html -->
+{% extends 'base.html' %}
+
+{% block title %}Home{% endblock %}
+
+{% block content %}
+
+{% if user.is_authenticated %}
+  Hi {{ user.username }}! let`s play a game!
+  <p><a href="{% url 'new_game' %}">play new game</a></p>
+  <p><a href="{% url 'logout' %}">logout</a></p>
+{% else %}
+  <p>log in to play a game.</p>
+  <a href="{% url 'login' %}">login</a>
+  <a href="{% url 'sign_up' %}">signup</a>
+{% endif %}
+    <p>best scores: </p>
+    <ul>
+    {% for player in object_list %}
+        <li>{{ player.nick }} - {{ player.score }}</li>
+    {% empty %}
+        <li>No players yet.</li>
+    {% endfor %}
+    </ul>
+{% endblock %}
