@@ -35,6 +35,7 @@ function setupChatMessageListener(userInput){
             insertChatMessage(this.value, true);
             message = serializeMessage(this.value);
             clearInput(this);
+            scrollBottom(document.getElementById("chatbox"));
             play(url + "/play", message)
                 .then(response => {
                     console.log(response);
@@ -45,6 +46,10 @@ function setupChatMessageListener(userInput){
                 .catch(error => console.log(error))
         }
     });
+}
+
+function scrollBottom(container){
+    container.scrollTop = container.scrollHeight;
 }
 
 function serializeMessage(message){
