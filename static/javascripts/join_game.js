@@ -194,6 +194,7 @@ function startWebSocketListener(gameId, userId){
       console.log('W' + this.id + ': ' + message.data);
       insertChatMessage('W' + this.id + ': ' + message.data, false);
       //insertChatMessage(message.data, false);
+      scrollBottom(document.getElementById("chatbox"));
       refreshGame();
     };
     // Send a new message when the WebSocket opens

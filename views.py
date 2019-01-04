@@ -1,6 +1,6 @@
 from battleships.models.game import Game
 from battleships.models.player import Player
-from battleships.utils.message_parser import parse_message
+from battleships.utils.message_utils import parse_message, push_message
 from battleships.utils.test_data_set import TestDataSet
 from battleships.models.serializers import GameSerializer
 from battleships.models.game import FireMessage, InvalidMessage, MoveMessage, IdleMessage, Message, OutputMessage, MessageType
@@ -123,6 +123,34 @@ def play(request, game_id, game_name):
         Group('game-%s' % game_id).send({
             'text': str(game_player_id) + ": " + message.toJSON(),
         })
+        #output_message = OutputMessage()
+        #output_message.message = "dupa"
+        #Group('game-%s' % game_id).send({
+        #    'text': str(game_player_id) + ": " + output_message.toJSON(),
+        #})
+        if isinstance(message, FireMessage):
+             output_message = game.fire_ship(game_player_id, message.attacker, message.defender)
+             push_message(game_id, game_player_id, output_message)
+             output_message = game.play()
+             push_message(game_id, game_player_id, output_message)
+        elif isinstance(message, MoveMessage):
+             output_message = game.move_ship(game_player_id, message.mover, message.move_type)
+             #push_message(game_id, game_player_id, output_message)
+             Group('game-%s' % game_id).send({
+                 'text': str(game_player_id) + ": " + output_message.toJSON(),
+             })
+             output_message = game.play()
+             #push_message(game_id, game_player_id, output_message)
+
+        elif isinstance(message, IdleMessage):
+             output_message = game.play()
+             push_message(game_id, game_player_id, output_message)
+        elif isinstance(message, InvalidMessage):
+             output_message = OutputMessage("Bad format!", MessageType.BAD_FORMAT, request.user.id)
+             push_message(game_id, game_player_id, output_message)
+        elif isinstance(message, Message):
+             output_message = OutputMessage(message.text, MessageType.MESSAGE)
+             push_message(game_id, game_player_id, output_message)
         return HttpResponse(request.user.id, status=200)
     else:
         return HttpResponse(status=403)
@@ -130,10 +158,7 @@ def play(request, game_id, game_name):
     # todo InvalidMessage should not be passed along to client
     # todo uncomment and debug game logic
     # method is invoked by client side
-     # get from session
-    #game = Game.objects.get(id=game_id)
 
-    #game_player_id = request.session["game_player_id"]
 
     #message = parse_message(raw_message)
 
@@ -157,6 +182,8 @@ def play(request, game_id, game_name):
     # elif isinstance(message, Message):
     #     output_message = OutputMessage(message.text, MessageType.MESSAGE)
     #     # push output_message via web socket
+
+
 
 
 # method checks if user who opened the game is a game player if not then enables joining

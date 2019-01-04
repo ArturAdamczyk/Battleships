@@ -12,27 +12,32 @@ class Submarine(Ship):
     def fire_power(self):
         return 20
 
-    def move(self, move: Move):
-        if move == Move.FORWARD:
-            self.shipPositions[1].y = self.shipPositions[1].y + 2
-        elif move == move.BACKWARD:
-            self.shipPositions[1].y = self.shipPositions[1].y - 2
-        elif move == move.RIGHT:
-            self.shipPositions[1].x = self.shipPositions[1].x + 2
-        elif move == move.LEFT:
-            self.shipPositions[1].x = self.shipPositions[1].x - 2
+    def move(self, move):
+        coordinate_1 = self.coordinate_set.filter()[:1].get()
+        if Move(move) == Move.FORWARD:
+            coordinate_1.y = coordinate_1.y + 2
+        elif Move(move) == Move.BACKWARD:
+            coordinate_1.y = coordinate_1.y - 2
+        elif Move(move) == Move.RIGHT:
+            coordinate_1.x = coordinate_1.x + 2
+        elif Move(move) == Move.LEFT:
+            coordinate_1.x = coordinate_1.x - 2
         else:
             pass
+        coordinate_1.save()
 
-    def get_position_after_move(self, move: Move) -> list:
-        ship_positions_after_move = copy.deepcopy(self.shipPositions)
-        if move == Move.FORWARD:
-            ship_positions_after_move[1].y = ship_positions_after_move[1].y + 2
-        elif move == Move.BACKWARD:
-            ship_positions_after_move[1].y = ship_positions_after_move[1].y - 2
-        elif move == Move.RIGHT:
-            ship_positions_after_move[1].x = ship_positions_after_move[1].x + 2
-        elif move == Move.LEFT:
-            ship_positions_after_move[1].x = ship_positions_after_move[1].x - 2
+    def get_position_after_move(self, move):
+        ship_positions_after_move = list(copy.deepcopy(self.coordinate_set.all()))
+        position_1 = ship_positions_after_move[0]
+        if Move(move) == Move.FORWARD:
+            position_1.y = position_1.y + 2
+        elif Move(move) == Move.BACKWARD:
+            position_1.y = position_1.y - 2
+        elif Move(move) == Move.RIGHT:
+            position_1.x = position_1.x + 2
+        elif Move(move) == Move.LEFT:
+            position_1.x = position_1.x - 2
         else:
             pass
+        return [position_1]
+

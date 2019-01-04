@@ -6,17 +6,10 @@ from battleships.utils.enum_utils import ChoiceEnum
 
 
 class Move(Enum):
-    FORWARD = "FORWARD"
-    BACKWARD = "BACKWARD"
-    RIGHT = "RIGHT"
-    LEFT = "LEFT"
-
-    @staticmethod
-    def is_correct(move)-> bool:
-        if move == Move.FORWARD.value or move == Move.BACKWARD.value or move == Move.RIGHT.value or move == Move.LEFT.value:
-            return True
-        else:
-            return False
+    FORWARD = "f"
+    BACKWARD = "b"
+    RIGHT = "r"
+    LEFT = "l"
 
 
 class Experience(ChoiceEnum):
@@ -54,21 +47,21 @@ class Ship(PolymorphicModel):
         #visibility_coordinates.append(Coordinate(1, 2))
         return visibility_coordinates
 
-    def move(self, move: Move)-> bool:
+    def move(self, move)-> bool:
         pass
 
     # todo ; when implemented then also move method must be changed
     def rotation(self, move: Move)-> bool:
         pass
 
-    def get_position_after_move(self)-> list:
+    def get_position_after_move(self, move):
         pass
 
     def next_level_ready(self) -> bool:
-        if self.experience == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER:
+        if self.experience == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER.value:
             self.experience = Experience.SOLDIER
             return True
-        elif self.experience == Experience.SOLDIER and self.experience_points >= ExperienceLevel.RECRUIT:
+        elif self.experience == Experience.SOLDIER and self.experience_points >= ExperienceLevel.RECRUIT.value:
             self.experience = ExperienceLevel.VETERAN
             return True
         else:

@@ -4,29 +4,26 @@ import json
 
 
 class FireResult:
-    HIT = "MOVE"
-    FIRE = "FIRE"
-    PASS = "PASS"
-    MESSAGE = "MESSAGE"
-    INVALID = "INVALID"
+    HIT = "hit"
+    FIRE = "fire"
+    PASS = "pass"
+    MESSAGE = "message"
+    INVALID = "invalid"
 
 
 class Commands:
-    MOVE = "MOVE"
-    FIRE = "FIRE"
-    PASS = "PASS"
-    MESSAGE = "MSG"
-    INVALID = "INVALID"
+    MOVE = "move"
+    FIRE = "fire"
+    PASS = "passS"
+    MESSAGE = "msg"
+    INVALID = "invalid"
 
 
-class Message():
+class Message:
     command = Commands.MESSAGE
     user_id = ""
     text = ""
     user_name = ""
-
-    #def __init__(self, text):
-    #    self.text = text
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -44,7 +41,7 @@ class FireMessage(Message):
 class MoveMessage(Message):
     command = Commands.MOVE
     mover = ""
-    move_type = Move.FORWARD
+    move_type = ""
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -53,18 +50,12 @@ class MoveMessage(Message):
 class IdleMessage(Message):
     command = Commands.PASS
 
-    #def __init__(self):
-    #    super(IdleMessage, self).__init__()
-
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 
 class InvalidMessage(Message):
     command = Commands.INVALID
-
-   # def __init__(self, text):
-   #    super(InvalidMessage, self).__init__(text)
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -92,6 +83,14 @@ class OutputMessage:
     message = ""
     message_type = MessageType
     receiver = ""  # if set than message is directed only to the specified player
+
+    def __init__(self, message, message_type, receiver=""):
+        self.message = message
+        self.message_type = message_type
+        self.receiver = receiver
+
+    def toJSON(self):
+        return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
 
 # create GameMessage with result string from move and fire funcs
@@ -173,13 +172,12 @@ class Game(models.Model):
 
     def move_ship(self, user, ship_name, direction)-> OutputMessage:
         self.check_game_finish()
-        ship = self.objects.get(user).find_ship(ship_name)
+        ship = self.gameplayer_set.get(id=user).find_ship(ship_name)
         if ship is None:
             return OutputMessage("Not found", MessageType.MOVE_FAILURE)
-        # ship_positions_after_move = ship.get_position_after_move()
         # check if no other ship blocks movement
-        for user in self.objects:
-            if not user.is_move_possible(ship, direction): # todo send board size in order to check also if ship will fit the board after move!
+        for game_player in self.gameplayer_set.all():
+            if not game_player.is_move_possible(ship, direction, self.boardSize):
                 return OutputMessage("Move not possible", MessageType.MOVE_FAILURE)
         ship.move(direction)
         return OutputMessage("Ship moved!", MessageType.MOVE_SUCCESS)

@@ -1,5 +1,6 @@
 from battleships.models.game import Message, InvalidMessage, FireMessage, MoveMessage, IdleMessage, Commands
 from battleships.models.ship import Move
+from channels import Group
 
 TO = "TO"
 
@@ -18,13 +19,13 @@ def parse_message(raw_message)-> Message:
             if len(list) == 4 and list[2] == TO:
                 message = FireMessage()
                 message.attacker = list[1]
-                message.defender = list[2]
+                message.defender = list[3]
                 return message
             else:
                 return InvalidMessage()
         elif list[0] == Commands.MOVE:
             if len(list) == 3:
-                if Move.is_correct(list[2]):
+                if list[2] == Move.FORWARD.value or list[2] == Move.BACKWARD.value or list[2] == Move.RIGHT.value or list[2] == Move.LEFT.value:
                     message = MoveMessage()
                     message.mover = list[1]
                     message.move_type = list[2]
@@ -47,6 +48,11 @@ def parse_message(raw_message)-> Message:
     else:
         return InvalidMessage()
 
+
+def push_message(game_id, game_player_id, output_message):
+    Group('game-%s' % game_id).send({
+        'text': str(game_player_id) + ": " + output_message.toJSON(),
+    })
 
 
 
