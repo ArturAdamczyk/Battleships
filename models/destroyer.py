@@ -4,8 +4,8 @@ import copy
 
 class Destroyer(Ship):
 
-    def max_strength(self):
-        return 80
+    MAX_STRENGTH = 80
+    VISIBILITY_RADIUS_MULTIPLIER = 0.3
 
     def fire_power(self):
         return 15

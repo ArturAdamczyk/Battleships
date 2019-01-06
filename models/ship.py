@@ -25,6 +25,8 @@ class ExperienceLevel(Enum):
 
 
 class Ship(PolymorphicModel):
+    EXPERIENCE_LEVEL_INCREASE = 50
+
     name = models.CharField(max_length=200, default='')
     strength = models.IntegerField(default=0)
     experience = models.CharField(max_length=20, choices=Experience.choices(), default=Experience.RECRUIT.value)
@@ -34,9 +36,6 @@ class Ship(PolymorphicModel):
 
     class Meta:
         abstract = True
-
-    def max_strength(self):
-        pass
 
     def fire_power(self):
         pass
@@ -58,7 +57,7 @@ class Ship(PolymorphicModel):
         pass
 
     def next_level_ready(self) -> bool:
-        if self.experience == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER.value:
+        if Experience(self.experience) == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER.value:
             self.experience = Experience.SOLDIER
             return True
         elif self.experience == Experience.SOLDIER and self.experience_points >= ExperienceLevel.RECRUIT.value:
@@ -68,14 +67,25 @@ class Ship(PolymorphicModel):
             return False
 
     def increase_experience_level(self):
-        if self.experience == ExperienceLevel.RECRUIT:
+        if ExperienceLevel(self.experience) == ExperienceLevel.RECRUIT:
             self.experience = ExperienceLevel.SOLDIER
-        elif self.experience == ExperienceLevel.SOLDIER:
+        elif ExperienceLevel(self.experience) == ExperienceLevel.SOLDIER:
             self.experience = ExperienceLevel.VETERAN
         else:
             pass
 
-    def get_hurt(self, how_much: int):
+    def get_damage_increase(self):
+        if Experience(self.experience) == Experience.RECRUIT:
+            return 0
+        elif Experience(self.experience) == Experience.SOLDIER:
+            return 10
+        else:
+            return 25
+
+    def increase_experience(self):
+        self.experience_points += Ship.EXPERIENCE_LEVEL_INCREASE
+
+    def get_hurt(self, how_much):
         self.strength -= how_much
 
     def is_sunk(self) -> bool:

@@ -79,23 +79,36 @@ function insertChatMessage(message, hostMessage){
     chat.appendChild(newLine);
 }
 
-
 function refreshUI(game){
-  var userIndex = getUserIndex(game.gamePlayers);
-  document.getElementById('game_fleet').innerHTML = "";
-  renderFleet(
-      game.gamePlayers[userIndex].carriers,
-      game.gamePlayers[userIndex].frigates,
-      game.gamePlayers[userIndex].submarines,
-      game.gamePlayers[userIndex].destroyers);
-  document.getElementById("game_title").innerHTML=renderTitle(game.name);
-  document.getElementById("board").innerHTML=renderBoard(game);
+    var userIndex = getUserIndex(game.gamePlayers);
+    document.getElementById('title').innerHTML = renderStatus(game, userIndex);
+    document.getElementById('game_fleet').innerHTML = "";
+    renderFleet(
+        game.gamePlayers[userIndex].carriers,
+        game.gamePlayers[userIndex].frigates,
+        game.gamePlayers[userIndex].submarines,
+        game.gamePlayers[userIndex].destroyers);
+    document.getElementById("game_title").innerHTML=renderTitle(game.name);
+    document.getElementById("board").innerHTML=renderBoard(game);
 }
 
+function renderStatus(game, userIndex){
+    if(game.finished){
+        return "GAME FINISHED";
+    }
+    if(game.gamePlayers[userIndex].lost){
+        return "GAME OVER!";
+    }
+    if(game.gamePlayers[userIndex].inControl){
+        return "PLAY!";
+    }else{
+        return "Wait for your turn...";
+    }
+}
 
 function getUserIndex(gamePlayers){
   var counter = 0;
-  gamePlayers.every( gamePlayer =>{
+  gamePlayers.every(gamePlayer =>{
       if(parseInt(gamePlayer.player) == parseInt(user_id)){
           return;
       }else{
@@ -106,7 +119,6 @@ function getUserIndex(gamePlayers){
 }
 
 function renderBoard(game){
-
   var board = [];
 
   for(var i=0; i < game.boardSize; i++){
@@ -122,31 +134,48 @@ function renderBoard(game){
 
     game.gamePlayers.forEach(function(gamePlayer) {
         switch(playersCounter){
-            case 0: color = colors.GREEN;
-            case 1: color = colors.RED;
-            case 2: color = colors.ORANGE;
-            case 3: color = colors.PURPLE;
+            case 0:
+                color = colors.GREEN;
+                break;
+            case 1:
+                color = colors.ORANGE;
+                break;
+            case 2:
+                color = colors.RED;
+                break;
+            case 3:
+                color = colors.PURPLE;
+                break;
         }
         gamePlayer.carriers.forEach(function(carrier) {
-            carrier.coordinates.forEach(function(coordinate) {
-                board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, carrier.name);
-            });
+            if(carrier.strength > 0){
+                carrier.coordinates.forEach(function(coordinate) {
+                    board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, carrier.name);
+                });
+            }
         });
         gamePlayer.frigates.forEach(function(frigate) {
-            frigate.coordinates.forEach(function(coordinate) {
-                board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, frigate.name);
-            });
+            if(frigate.strength > 0){
+                frigate.coordinates.forEach(function(coordinate) {
+                    board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, frigate.name);
+                });
+            }
         });
         gamePlayer.destroyers.forEach(function(destroyer) {
-            destroyer.coordinates.forEach(function(coordinate) {
-                board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, destroyer.name);
-            });
+            if(destroyer.strength > 0){
+                destroyer.coordinates.forEach(function(coordinate) {
+                    board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, destroyer.name);
+                });
+            }
         });
         gamePlayer.submarines.forEach(function(submarine) {
-            submarine.coordinates.forEach(function(coordinate) {
-                board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, submarine.name);
-            });
+            if (submarine.strength > 0){
+                submarine.coordinates.forEach(function(coordinate) {
+                    board[game.boardSize-coordinate.y][coordinate.x-1] = new BoardElement(color, submarine.name);
+                });
+            }
         });
+        playersCounter++
     });
 
 return board.map(row => row.map(col => `<span class="field ${determineColor(col.color)}">${col.name}</span>` ).join("")).join("<span class='clear'></span>");
@@ -174,7 +203,9 @@ function render_ships(ships, ships_name){
   var listElem = document.getElementById('game_fleet');
   listElem.innerHTML += "<h4>"+ ships_name +"</h4>";
   ships.forEach(function(ship) {
-    listElem.innerHTML += "<li> <b><font color=\"black\">NAME: </font></b>  " + +ship.name+  " <b><font color=\"black\"> EXP: </font></b> " + ship.experience + " <b><font color=\"black\"> STRENGTH: </font></b> " + ship.strength+ "</li>";
+      if(ship.strength > 0){
+        listElem.innerHTML += "<li> <b><font color=\"black\">NAME: </font></b>  " + +ship.name+  " <b><font color=\"black\"> EXP: </font></b> " + ship.experience + " <b><font color=\"black\"> STRENGTH: </font></b> " + ship.strength+ "</li>";
+      }
   });
 }
 
@@ -191,9 +222,14 @@ function startWebSocketListener(gameId, userId){
     // Make it show an alert when a message is received
     ws.onmessage = function(message) {
         // do stuff when message received
-      console.log('W' + this.id + ': ' + message.data);
-      insertChatMessage('W' + this.id + ': ' + message.data, false);
-      //insertChatMessage(message.data, false);
+      console.log('WS' + this.id + ': ' + message.data);
+      //insertChatMessage('W' + this.id + ': ' + message.data, false);
+      let webSocketMessage = parseWebSocketMessage(message.data);
+      if(webSocketMessage.type == MESSAGE_TYPE.INFO){
+          insertChatMessage(webSocketMessage.author + " " + webSocketMessage.rawMessage, false);
+      }else {
+          insertChatMessage(webSocketMessage.author + " " + webSocketMessage.gameMessage.message, false);
+      }
       scrollBottom(document.getElementById("chatbox"));
       refreshGame();
     };
@@ -258,6 +294,38 @@ async function fetchGameData(url) {
 
 
 
+// WS MESSAGE PARSER:
+
+
+const INDEX_EMPTY = -1;
+
+function parseWebSocketMessage(rawMessage){
+    let separatorIndex = rawMessage.indexOf("{");
+    if (separatorIndex == INDEX_EMPTY){
+        return new WebSocketMessage(rawMessage, MESSAGE_TYPE.INFO, "GAME:", "");
+    }else{
+        var author = rawMessage.substring(0,separatorIndex);
+        var gameMessage = rawMessage.substring(separatorIndex);
+        console.log(gameMessage);
+        let parsedGameMessage = GameMessage.fromJson(JSON.parse(gameMessage));
+        console.log(parsedGameMessage.message_type);
+        console.log(parsedGameMessage.message_type.toString());
+        if(parsedGameMessage.message_type.toString() != "COMMAND".toString()){
+            author = "GAME:";
+        }
+        return new WebSocketMessage(rawMessage, MESSAGE_TYPE.GAME, author, parsedGameMessage);
+    }
+}
+
+
+
+
+
+
+
+
+
+
 
 
 
@@ -293,9 +361,6 @@ class Game{
 
 
 Game.fromJson = function (json){
-    //var obj = JSON.parse (json);
-    console.log(json.name);
-    //return new Game (obj.id, obj.name, obj.boardSize, obj.finished, obj.maxPlayers, GamePlayer.fromJson(obj.gameplayer_set));
     var gamePlayers = [];
     json.gameplayer_set.forEach(function(gamePlayer) {
         gamePlayers.push(GamePlayer.fromJson(gamePlayer))
@@ -320,7 +385,6 @@ class GamePlayer{
 }
 
 GamePlayer.fromJson = function (obj){
-    //var obj = JSON.parse (json);
 
     var carriers = [];
     obj.carrier_set.forEach(function(carrier) {
@@ -338,7 +402,7 @@ GamePlayer.fromJson = function (obj){
     obj.destroyer_set.forEach(function(destroyer) {
         destroyers.push(Ship.fromJson(destroyer))
     });
-    return new GamePlayer(obj.id, obj.name, obj.player, obj.lost, obj.ready, obj.inControl, carriers, frigates, submarines, destroyers);
+    return new GamePlayer(obj.id, obj.game_nick, obj.player, obj.lost, obj.ready, obj.inControl, carriers, frigates, submarines, destroyers);
 };
 
 
@@ -347,7 +411,7 @@ class Ship{
         this.id = id;
         this.name = name;
         this.strength = strength;
-        this.experience = experience,
+        this.experience = experience;
         this.experiencePoints = experiencePoints;
         this.coordinates = coordinates;
     }
@@ -372,3 +436,35 @@ class Coordinate{
 Coordinate.fromJson = function (obj){
     return new Coordinate(obj.x, obj.y);
 };
+
+
+class GameMessage{
+    constructor(message, message_type, receiver){
+        this.message = message;
+        this.message_type = message_type;
+        this.receiver = receiver;
+    }
+}
+
+GameMessage.fromJson = function (obj){
+    console.log(obj);
+    return new GameMessage(obj.message, obj.message_type, obj.receiver);
+};
+
+
+
+
+const MESSAGE_TYPE = {
+  INFO: "INFO",
+  GAME: "GAME"
+};
+
+class WebSocketMessage{
+
+    constructor(rawMessage, type, author, gameMessage){
+        this.rawMessage = rawMessage;
+        this.type = type;
+        this.author = author;
+        this.gameMessage = gameMessage;
+    }
+}

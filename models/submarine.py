@@ -6,8 +6,8 @@ import copy
 
 class Submarine(Ship):
 
-    def max_strength(self):
-        return 40
+    MAX_STRENGTH = 40
+    VISIBILITY_RADIUS_MULTIPLIER = 0.2
 
     def fire_power(self):
         return 20

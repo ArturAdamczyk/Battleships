@@ -9,8 +9,8 @@ import copy
 
 class Carrier(Ship):
 
-    def max_strength(self):
-        return 100
+    MAX_STRENGTH = 100
+    VISIBILITY_RADIUS_MULTIPLIER = 0.4
 
     def fire_power(self):
         return 10

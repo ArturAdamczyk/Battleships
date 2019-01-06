@@ -7,6 +7,7 @@ SCORE_INCREASE_VALUE = 100
 
 class GamePlayer(models.Model):
     ready = models.BooleanField(default=False)
+    game_nick = models.CharField(max_length=200, default='')
     lost = models.BooleanField(default=False)
     inControl = models.BooleanField(default=False)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
@@ -36,7 +37,7 @@ class GamePlayer(models.Model):
         ship_positions_after_move = moving_ship.get_position_after_move(direction)
         # first check if board is not exceeded!
         for position in ship_positions_after_move:
-            if position.x > board_size or position.x <= 1 or position.y > board_size or position.y <= 1:
+            if position.x > board_size or position.x < 1 or position.y > board_size or position.y < 1:
                 return False
 
         # check if there is no other ship on this position

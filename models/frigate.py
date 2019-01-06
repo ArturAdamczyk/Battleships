@@ -4,8 +4,8 @@ import copy
 
 class Frigate(Ship):
 
-    def max_strength(self):
-        return 50
+    MAX_STRENGTH = 50
+    VISIBILITY_RADIUS_MULTIPLIER = 0.1
 
     def fire_power(self):
         return 5
