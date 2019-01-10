@@ -16,6 +16,7 @@ class Player(models.Model):
 @receiver(post_save, sender=User)
 def create_user_profile(sender, instance, created, **kwargs):
     if created:
+        instance.nick = instance.username
         Player.objects.create(user=instance)
     instance.player.save()
 

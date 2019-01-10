@@ -6,17 +6,10 @@ from battleships.utils.enum_utils import ChoiceEnum
 
 
 class Move(Enum):
-    FORWARD = "FORWARD"
-    BACKWARD = "BACKWARD"
-    RIGHT = "RIGHT"
-    LEFT = "LEFT"
-
-    @staticmethod
-    def is_correct(move)-> bool:
-        if move == Move.FORWARD.value or move == Move.BACKWARD.value or move == Move.RIGHT.value or move == Move.LEFT.value:
-            return True
-        else:
-            return False
+    FORWARD = "forth"
+    BACKWARD = "back"
+    RIGHT = "right"
+    LEFT = "left"
 
 
 class Experience(ChoiceEnum):
@@ -27,11 +20,13 @@ class Experience(ChoiceEnum):
 
 class ExperienceLevel(Enum):
     RECRUIT = 0
-    SOLDIER = 100
-    VETERAN = 250
+    SOLDIER = 50
+    VETERAN = 70
 
 
 class Ship(PolymorphicModel):
+    EXPERIENCE_LEVEL_INCREASE = 50
+
     name = models.CharField(max_length=200, default='')
     strength = models.IntegerField(default=0)
     experience = models.CharField(max_length=20, choices=Experience.choices(), default=Experience.RECRUIT.value)
@@ -42,9 +37,6 @@ class Ship(PolymorphicModel):
     class Meta:
         abstract = True
 
-    def max_strength(self):
-        pass
-
     def fire_power(self):
         pass
 
@@ -54,35 +46,44 @@ class Ship(PolymorphicModel):
         #visibility_coordinates.append(Coordinate(1, 2))
         return visibility_coordinates
 
-    def move(self, move: Move)-> bool:
+    def move(self, move)-> bool:
         pass
 
     # todo ; when implemented then also move method must be changed
     def rotation(self, move: Move)-> bool:
         pass
 
-    def get_position_after_move(self)-> list:
+    def get_position_after_move(self, move):
         pass
 
     def next_level_ready(self) -> bool:
-        if self.experience == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER:
-            self.experience = Experience.SOLDIER
+        if Experience(self.experience) == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER.value:
             return True
-        elif self.experience == Experience.SOLDIER and self.experience_points >= ExperienceLevel.RECRUIT:
-            self.experience = ExperienceLevel.VETERAN
+        elif Experience(self.experience) == Experience.SOLDIER and self.experience_points >= ExperienceLevel.VETERAN.value:
             return True
         else:
             return False
 
     def increase_experience_level(self):
-        if self.experience == ExperienceLevel.RECRUIT:
-            self.experience = ExperienceLevel.SOLDIER
-        elif self.experience == ExperienceLevel.SOLDIER:
-            self.experience = ExperienceLevel.VETERAN
+        if Experience(self.experience) == Experience.RECRUIT:
+            self.experience = Experience.SOLDIER.value
+        elif Experience(self.experience) == Experience.SOLDIER:
+            self.experience = Experience.VETERAN.value
         else:
             pass
 
-    def get_hurt(self, how_much: int):
+    def get_damage_increase(self):
+        if Experience(self.experience) == Experience.RECRUIT:
+            return 0
+        elif Experience(self.experience) == Experience.SOLDIER:
+            return 10
+        else:
+            return 25
+
+    def increase_experience(self):
+        self.experience_points += Ship.EXPERIENCE_LEVEL_INCREASE
+
+    def get_hurt(self, how_much):
         self.strength -= how_much
 
     def is_sunk(self) -> bool:

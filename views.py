@@ -1,6 +1,6 @@
 from battleships.models.game import Game
 from battleships.models.player import Player
-from battleships.utils.message_parser import parse_message
+from battleships.utils.message_utils import parse_message, push_message
 from battleships.utils.test_data_set import TestDataSet
 from battleships.models.serializers import GameSerializer
 from battleships.models.game import FireMessage, InvalidMessage, MoveMessage, IdleMessage, Message, OutputMessage, MessageType
@@ -48,13 +48,9 @@ def sign_up(request):
 
 # creates score ranking
 class PlayerListView(ListView):
-
     model = Player
     paginate_by = 100
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+    queryset = Player.objects.order_by('-score')
 
 
 # renders game template
@@ -71,7 +67,7 @@ def new_game(request):
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         if form.is_valid():
-            game = Game(boardSize=40, max_players=4, name=request.POST['name'])
+            game = Game(boardSize=40, max_players=2, name=request.POST['name'])
             game.save()
             game_url = 'http://' + get_current_site(request).domain + '/game/' + str(game.id) + '/' + game.name.replace(" ", "_")
             response = {
@@ -93,16 +89,22 @@ def add_player(request, game_id):
 
     if game.is_max_players():  # when board is full not anymore players can join it
         return HttpResponse(json.dumps("No more players can join!"),  status=403)
-    game_player = GamePlayer(player_id=Player.objects.get(user_id=request.user.id).id, game_id=game.id)
+    player = Player.objects.get(user_id=request.user.id)
+    game_player = GamePlayer(player_id=player.id, game_id=game.id, game_nick=player.nick)
+    if game.gameplayer_set.count() == 0:
+        game_player.inControl = True
+    game_player.index = game.gameplayer_set.count() + 1
     game_player.save()
-    game_player.attach_ships(TestDataSet.get_ships_set(game.get_players_count()))
+    game_player.attach_ships(TestDataSet.get_ships_set(game.get_players_count(), game.boardSize))
     init_session(request, game_id, game.get_player_id(request.user.id))
-    return HttpResponse(json.dumps("Player successfully added!"),  status=200)
-    #OutputMessage("Player added successfully", MessageType.PLAYER_ADDITION_SUCCESS, request.user.id)
-    # todo send output message via web socket
+
+    output_message = OutputMessage("New player has joined!", MessageType.PLAYER_ADDITION_SUCCESS, request.user.id)
+    push_message(game_id, game_player.id, game_player.game_nick, output_message)
+
     if game.is_max_players():  # after player addition board is full so start the game
-        # todo push BEGIN_GAME message via web socket
-        pass
+        output_message = OutputMessage("The game has begun", MessageType.GAME_BEGIN)
+        push_message(game_id, game_player.id, game_player.game_nick, output_message)
+    return HttpResponse(json.dumps("Player successfully added!"), status=200)
 
 
 # parses message received from client and invokes proper game method then pushes return message via web socket
@@ -116,47 +118,63 @@ def play(request, game_id, game_name):
     if request.method == 'POST':
         raw_message = json.loads(request.body.decode('utf-8'))['message']
         game = Game.objects.get(id=game_id)
-        # todo no nick is created for player!
-        #game_player_nick = Player.objects.get(id=game.get_player_id(request.user.id)).nick
-        game_player_id = game.get_player(request.user.id).id
+        game_player = game.get_player(request.user.id)
+        if game_player.lost:
+            return HttpResponse(status=403)
+        game_player_id = game_player.id
         message = parse_message(raw_message)
-        Group('game-%s' % game_id).send({
-            'text': str(game_player_id) + ": " + message.toJSON(),
-        })
+        push_message(game_id, game_player_id, game_player.game_nick, OutputMessage(message.text, MessageType.COMMAND))
+
+        if game.is_game_finished():
+            push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, game already finished!", MessageType.GAME_FINISHED))
+            return HttpResponse(status=403)
+
+        if game_player.lost:
+            push_message(game_id, game_player_id, game_player.game_nick,OutputMessage("Cannot perform action, you already lost the game!", MessageType.GAME_FINISHED))
+            return HttpResponse(status=403)
+
+        if not game.all_players_ready():
+            push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, waiting for players to join the game...", MessageType.GAME_NOT_STARTED))
+            return HttpResponse(status=403)
+
+        if isinstance(message, FireMessage):
+            if game.is_player_turn(game_player_id):
+                output_message = game.fire_ship(game_player_id, message.attacker, message.defender)
+                push_message(game_id, game_player_id, game_player.game_nick, output_message)
+                if not output_message.message_type == MessageType.FIRE_FAILURE:
+                    output_message = game.play()
+                    game.save()
+                    push_message(game_id, game_player_id, game_player.game_nick, output_message)
+            else:
+                push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, it is not your turn!", MessageType.WRONG_ROUND))
+                return HttpResponse(status=403)
+        elif isinstance(message, MoveMessage):
+            if game.is_player_turn(game_player_id):
+                output_message = game.move_ship(game_player_id, message.mover, message.move_type)
+                push_message(game_id, game_player_id, game_player.game_nick, output_message)
+                if not output_message.message_type == MessageType.MOVE_FAILURE:
+                    output_message = game.play()
+                    game.save()
+                    push_message(game_id, game_player_id, game_player.game_nick, output_message)
+            else:
+                push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, it is not your turn!", MessageType.WRONG_ROUND))
+                return HttpResponse(status=403)
+        elif isinstance(message, IdleMessage):
+            if game.is_player_turn(game_player_id):
+                output_message = game.play()
+                push_message(game_id, game_player_id, game_player.game_nick, output_message)
+            else:
+                push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, it is not your turn!", MessageType.WRONG_ROUND))
+                return HttpResponse(status=403)
+        elif isinstance(message, InvalidMessage):
+            #pass
+            push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Bad format!", MessageType.BAD_FORMAT, request.user.id))
+        elif isinstance(message, Message):
+            output_message = OutputMessage(message.get_text(), MessageType.MESSAGE)
+            push_message(game_id, game_player_id, game_player.game_nick, output_message)
         return HttpResponse(request.user.id, status=200)
     else:
         return HttpResponse(status=403)
-
-    # todo InvalidMessage should not be passed along to client
-    # todo uncomment and debug game logic
-    # method is invoked by client side
-     # get from session
-    #game = Game.objects.get(id=game_id)
-
-    #game_player_id = request.session["game_player_id"]
-
-    #message = parse_message(raw_message)
-
-    # if isinstance(message, FireMessage):
-    #     output_message = game.fire_ship(game_player_id, message.attacker, message.defender)
-    #     # push output_message via web socket
-    #     output_message = game.play()
-    #     # push output_message via web socket
-    #     pass
-    # elif isinstance(message, MoveMessage):
-    #     output_message = game.move_ship()
-    #     # push output_message via web socket
-    #     output_message = game.play()
-    #     # push output_message via web socket
-    # elif isinstance(message, IdleMessage):
-    #     output_message = game.play()
-    #     # push output_message via web socket
-    # elif isinstance(message, InvalidMessage):
-    #     output_message = OutputMessage("Bad format!", MessageType.BAD_FORMAT, request.user.id)
-    #     # push output_message via web socket
-    # elif isinstance(message, Message):
-    #     output_message = OutputMessage(message.text, MessageType.MESSAGE)
-    #     # push output_message via web socket
 
 
 # method checks if user who opened the game is a game player if not then enables joining
