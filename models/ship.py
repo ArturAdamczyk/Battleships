@@ -6,10 +6,10 @@ from battleships.utils.enum_utils import ChoiceEnum
 
 
 class Move(Enum):
-    FORWARD = "f"
-    BACKWARD = "b"
-    RIGHT = "r"
-    LEFT = "l"
+    FORWARD = "forth"
+    BACKWARD = "back"
+    RIGHT = "right"
+    LEFT = "left"
 
 
 class Experience(ChoiceEnum):

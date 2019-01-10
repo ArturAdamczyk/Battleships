@@ -7,10 +7,10 @@ AT = "at"
 
 # todo send user name as first arg!
 # Accepts only messages in format:
-# MOVE ship_name LEFT
-# FIRE ship_name TO ship_name
-# PASS
-# MESSAGE message
+# move ship_name [left,right,forth,back]
+# fire ship_name at ship_name
+# pass
+# msg message
 #
 # Any other message is considered as INVALID
 def parse_message(raw_message)-> Message:
