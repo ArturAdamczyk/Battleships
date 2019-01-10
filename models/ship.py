@@ -20,8 +20,8 @@ class Experience(ChoiceEnum):
 
 class ExperienceLevel(Enum):
     RECRUIT = 0
-    SOLDIER = 50
-    VETERAN = 70
+    SOLDIER = 100
+    VETERAN = 250
 
 
 class Ship(PolymorphicModel):
