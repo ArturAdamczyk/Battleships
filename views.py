@@ -48,13 +48,9 @@ def sign_up(request):
 
 # creates score ranking
 class PlayerListView(ListView):
-
     model = Player
     paginate_by = 100
-
-    def get_context_data(self, **kwargs):
-        context = super().get_context_data(**kwargs)
-        return context
+    queryset = Player.objects.order_by('-score')
 
 
 # renders game template
@@ -97,6 +93,7 @@ def add_player(request, game_id):
     game_player = GamePlayer(player_id=player.id, game_id=game.id, game_nick=player.nick)
     if game.gameplayer_set.count() == 0:
         game_player.inControl = True
+    game_player.index = game.gameplayer_set.count() + 1
     game_player.save()
     game_player.attach_ships(TestDataSet.get_ships_set(game.get_players_count(), game.boardSize))
     init_session(request, game_id, game.get_player_id(request.user.id))
@@ -121,15 +118,19 @@ def play(request, game_id, game_name):
     if request.method == 'POST':
         raw_message = json.loads(request.body.decode('utf-8'))['message']
         game = Game.objects.get(id=game_id)
-        # todo no nick is created for player!
-        #game_player_nick = Player.objects.get(id=game.get_player_id(request.user.id)).nick
         game_player = game.get_player(request.user.id)
+        if game_player.lost:
+            return HttpResponse(status=403)
         game_player_id = game_player.id
         message = parse_message(raw_message)
         push_message(game_id, game_player_id, game_player.game_nick, OutputMessage(message.text, MessageType.COMMAND))
 
         if game.is_game_finished():
             push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, game already finished!", MessageType.GAME_FINISHED))
+            return HttpResponse(status=403)
+
+        if game_player.lost:
+            push_message(game_id, game_player_id, game_player.game_nick,OutputMessage("Cannot perform action, you already lost the game!", MessageType.GAME_FINISHED))
             return HttpResponse(status=403)
 
         if not game.all_players_ready():
@@ -166,9 +167,8 @@ def play(request, game_id, game_name):
                 push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Cannot perform action, it is not your turn!", MessageType.WRONG_ROUND))
                 return HttpResponse(status=403)
         elif isinstance(message, InvalidMessage):
-            pass
-            #output_message = OutputMessage("Bad format!", MessageType.BAD_FORMAT, request.user.id)
-            #push_message(game_id, game_player_id, output_message)
+            #pass
+            push_message(game_id, game_player_id, game_player.game_nick, OutputMessage("Bad format!", MessageType.BAD_FORMAT, request.user.id))
         elif isinstance(message, Message):
             output_message = OutputMessage(message.get_text(), MessageType.MESSAGE)
             push_message(game_id, game_player_id, game_player.game_nick, output_message)

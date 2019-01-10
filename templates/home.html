@@ -19,7 +19,7 @@
     {% for player in object_list %}
         <li>{{ player.nick }} - {{ player.score }}</li>
     {% empty %}
-        <li>No players yet.</li>
+        <li>No players.</li>
     {% endfor %}
     </ul>
 {% endblock %}

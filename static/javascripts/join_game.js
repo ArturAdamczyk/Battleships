@@ -1,6 +1,7 @@
 var url = window.location.href;
 var webSocketStarted = false;
 const KEY_ENTER = 13;
+var GAME_FINISHED = false;
 // user_id is a globally accessible variable instantiated in game.html
 
 // 'main' func invoked on page load
@@ -31,7 +32,7 @@ function loadGame(){
 function setupChatMessageListener(userInput){
     userInput.addEventListener("keyup", function(event) {
         event.preventDefault();
-        if (event.keyCode === KEY_ENTER) {
+        if (event.keyCode === KEY_ENTER && !GAME_FINISHED) {
             insertChatMessage(this.value, true);
             message = serializeMessage(this.value);
             clearInput(this);
@@ -94,15 +95,17 @@ function refreshUI(game){
 
 function renderStatus(game, userIndex){
     if(game.finished){
-        return "GAME FINISHED";
+        GAME_FINISHED = true;
+        return "<span class='status'>GAME FINISHED</span>"
     }
     if(game.gamePlayers[userIndex].lost){
-        return "GAME OVER!";
+        GAME_FINISHED = true;
+        return "<span class='status'>GAME OVER!</span>"
     }
     if(game.gamePlayers[userIndex].inControl){
-        return "PLAY!";
+        return "<span class='status'>PLAY!</span>";
     }else{
-        return "Wait for your turn...";
+        return "<span class='status'>Wait for your turn...</span>";
     }
 }
 
@@ -129,21 +132,20 @@ function renderBoard(game){
       }
   }
 
-  var playersCounter = 0;
   var color = colors.BLUE;
 
     game.gamePlayers.forEach(function(gamePlayer) {
-        switch(playersCounter){
-            case 0:
+        switch(gamePlayer.index){
+            case 1:
                 color = colors.GREEN;
                 break;
-            case 1:
+            case 2:
                 color = colors.ORANGE;
                 break;
-            case 2:
+            case 3:
                 color = colors.RED;
                 break;
-            case 3:
+            case 4:
                 color = colors.PURPLE;
                 break;
         }
@@ -175,11 +177,9 @@ function renderBoard(game){
                 });
             }
         });
-        playersCounter++
     });
 
 return board.map(row => row.map(col => `<span class="field ${determineColor(col.color)}">${col.name}</span>` ).join("")).join("<span class='clear'></span>");
-
 }
 
 function determineColor(color){
@@ -228,7 +228,13 @@ function startWebSocketListener(gameId, userId){
       if(webSocketMessage.type == MESSAGE_TYPE.INFO){
           insertChatMessage(webSocketMessage.author + " " + webSocketMessage.rawMessage, false);
       }else {
-          insertChatMessage(webSocketMessage.author + " " + webSocketMessage.gameMessage.message, false);
+          console.log(webSocketMessage.gameMessage.receiver.toString());
+          console.log(user_id.toString());
+          if(webSocketMessage.gameMessage.receiver == user_id.toString()){
+              insertChatMessage("Game: " + webSocketMessage.gameMessage.message, false);
+          }else{
+              insertChatMessage(webSocketMessage.author + " " + webSocketMessage.gameMessage.message, false);
+          }
       }
       scrollBottom(document.getElementById("chatbox"));
       refreshGame();
@@ -306,10 +312,7 @@ function parseWebSocketMessage(rawMessage){
     }else{
         var author = rawMessage.substring(0,separatorIndex);
         var gameMessage = rawMessage.substring(separatorIndex);
-        console.log(gameMessage);
         let parsedGameMessage = GameMessage.fromJson(JSON.parse(gameMessage));
-        console.log(parsedGameMessage.message_type);
-        console.log(parsedGameMessage.message_type.toString());
         if(parsedGameMessage.message_type.toString() != "COMMAND".toString()){
             author = "GAME:";
         }
@@ -370,10 +373,11 @@ Game.fromJson = function (json){
 
 
 class GamePlayer{
-    constructor(id, name, player, lost, ready, inControl, carriers, frigates, submarines, destroyers){
+    constructor(id, name, player, index, lost, ready, inControl, carriers, frigates, submarines, destroyers){
         this.id = id;
         this.name = name;
         this.player = player;
+        this.index = index;
         this.lost = lost;
         this.ready = ready;
         this.inControl = inControl;
@@ -402,7 +406,7 @@ GamePlayer.fromJson = function (obj){
     obj.destroyer_set.forEach(function(destroyer) {
         destroyers.push(Ship.fromJson(destroyer))
     });
-    return new GamePlayer(obj.id, obj.game_nick, obj.player, obj.lost, obj.ready, obj.inControl, carriers, frigates, submarines, destroyers);
+    return new GamePlayer(obj.id, obj.game_nick, obj.player, obj.index, obj.lost, obj.ready, obj.inControl, carriers, frigates, submarines, destroyers);
 };
 
 

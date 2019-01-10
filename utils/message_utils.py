@@ -23,7 +23,7 @@ def parse_message(raw_message)-> Message:
                 message.defender = list[3]
                 return message
             else:
-                return InvalidMessage()
+                return InvalidMessage(raw_message)
         elif list[0] == Commands.MOVE:
             if len(list) == 3:
                 if list[2] == Move.FORWARD.value or list[2] == Move.BACKWARD.value or list[2] == Move.RIGHT.value or list[2] == Move.LEFT.value:
@@ -32,22 +32,22 @@ def parse_message(raw_message)-> Message:
                     message.move_type = list[2]
                     return message
                 else:
-                    return InvalidMessage()
+                    return InvalidMessage(raw_message)
             else:
-                return InvalidMessage()
+                return InvalidMessage(raw_message)
         elif list[0] == Commands.PASS:
             if len(list) == 1:
                 message = IdleMessage("Passes round")
                 return message
             else:
-                return InvalidMessage()
+                return InvalidMessage(raw_message)
         elif list[0] == Commands.MESSAGE:
             message = Message(raw_message)
             return message
         else:
-            return InvalidMessage()
+            return InvalidMessage(raw_message)
     else:
-        return InvalidMessage()
+        return InvalidMessage(raw_message)
 
 
 def push_message(game_id, game_player_id, game_player_name, output_message):

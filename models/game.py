@@ -3,6 +3,8 @@ from battleships.models.ship import Move
 import json
 import random
 
+MISS_CHANCE_VALUE = 3
+MISS_VALUE = 1
 
 class FireResult:
     HIT = "hit"
@@ -15,7 +17,7 @@ class FireResult:
 class Commands:
     MOVE = "move"
     FIRE = "fire"
-    PASS = "passS"
+    PASS = "pass"
     MESSAGE = "msg"
     INVALID = "invalid"
 
@@ -83,8 +85,8 @@ class IdleMessage(Message):
 class InvalidMessage(Message):
     command = Commands.INVALID
 
-    def __init__(self):
-        Message.__init__(self)
+    def __init__(self, text):
+        Message.__init__(self, text)
 
     def toJSON(self):
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
@@ -168,11 +170,11 @@ class Game(models.Model):
             return OutputMessage("Game is full!", MessageType.PLAYER_ADDITION_FAILURE, user_id)
 
     def play(self)-> OutputMessage:
-        #self.refresh_game_status()
+        self.refresh_game_status()
         if not self.finished:
             return self.next_round()
         else:
-            return OutputMessage("Game finished, player " + self.winner.name + " won!", MessageType.GAME_END, self.winner.id)
+            return OutputMessage("Game finished, player " + self.winner.game_nick + " won!", MessageType.GAME_END, self.winner.id)
 
     def refresh_game_status(self):
         lost_players = 0
@@ -185,7 +187,8 @@ class Game(models.Model):
         if self.max_players - lost_players == 1:
             self.winner = winner
             self.finished = True
-            #self.gameplayer_set.get(id=self.winner.id).increase_score()
+            self.winner.increase_score()
+            self.winner.save()
 
     def next_round(self)-> OutputMessage:
         counter = 0
@@ -197,7 +200,6 @@ class Game(models.Model):
                     player_in_control = game_players[0]
                 else:
                     player_in_control = game_players[counter + 1]
-                print(player_in_control)
                 player_in_control.inControl = True
                 old_player_in_control = game_players[counter]
                 old_player_in_control.inControl = False
@@ -209,7 +211,7 @@ class Game(models.Model):
                     player_in_control.save()
                 return OutputMessage(
                     "Next round: Player " +
-                    player_in_control.username +
+                    player_in_control.game_nick +
                     " in control",
                     MessageType.NEXT_ROUND,
                     player_in_control.id)
@@ -259,21 +261,22 @@ class Game(models.Model):
         if not self.has_missed():
             damage = attacking_ship.fire_power() + attacking_ship.get_damage_increase()
             attacking_ship.increase_experience()
+            if attacking_ship.next_level_ready():
+                attacking_ship.increase_experience_level()
             attacking_ship.save()
             defending_ship.get_hurt(damage)
             defending_ship.save()
+            if not defending_ship.game_player.has_ships():
+                defending_ship.game_player.lost = True
+                defending_ship.game_player.save()
             return OutputMessage("Ship hit with " + str(damage), MessageType.FIRE_SUCCESS)
         else:
             return OutputMessage("Missed shot!", MessageType.FIRE_MISS)
-            #break
         #return OutputMessage("Ship not within range!", MessageType.FIRE_MISS)
 
-    # def check_move_possibility(self)-> bool:
-    #    pass
-
     def has_missed(self)-> bool:
-        missed = random.randrange(0, 2)
-        if missed == 1:
+        missed = random.randrange(0, MISS_CHANCE_VALUE)
+        if missed == MISS_VALUE:
             return True
         else:
             return False

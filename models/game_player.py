@@ -10,6 +10,7 @@ class GamePlayer(models.Model):
     game_nick = models.CharField(max_length=200, default='')
     lost = models.BooleanField(default=False)
     inControl = models.BooleanField(default=False)
+    index = models.IntegerField(default=0)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(to='Game', on_delete=models.CASCADE)
 
@@ -31,6 +32,7 @@ class GamePlayer(models.Model):
 
     def increase_score(self):
         self.player.score += SCORE_INCREASE_VALUE
+        self.player.save()
 
     # it would be better to store the whole board in game with enum types and just check it out there
     def is_move_possible(self, moving_ship, direction, board_size)-> bool:
@@ -42,24 +44,25 @@ class GamePlayer(models.Model):
 
         # check if there is no other ship on this position
         for ship in self.carrier_set.all():
+
             for ship_position in ship.coordinate_set.all():
                 for position in ship_positions_after_move:
-                    if ship_position.x == position.x and ship_position.y == position.y and ship.id != moving_ship.id:
+                    if ship_position.x == position.x and ship_position.y == position.y and ship != moving_ship:
                         return False
         for ship in self.frigate_set.all():
             for ship_position in ship.coordinate_set.all():
                 for position in ship_positions_after_move:
-                    if ship_position.x == position.x and ship_position.y == position.y and ship.id != moving_ship.id:
+                    if ship_position.x == position.x and ship_position.y == position.y and ship != moving_ship:
                         return False
         for ship in self.destroyer_set.all():
             for ship_position in ship.coordinate_set.all():
                 for position in ship_positions_after_move:
-                    if ship_position.x == position.x and ship_position.y == position.y and ship.id != moving_ship.id:
+                    if ship_position.x == position.x and ship_position.y == position.y and ship != moving_ship:
                         return False
         for ship in self.submarine_set.all():
             for ship_position in ship.coordinate_set.all():
                 for position in ship_positions_after_move:
-                    if ship_position.x == position.x and ship_position.y == position.y and ship.id != moving_ship.id:
+                    if ship_position.x == position.x and ship_position.y == position.y and ship != moving_ship:
                         return False
         return True
 
@@ -70,3 +73,18 @@ class GamePlayer(models.Model):
         for ship in ships:
             ship.game_player = self
             ship.save()
+
+    def has_ships(self):
+        for ship in self.carrier_set.all():
+            if ship.strength > 0:
+                return True
+        for ship in self.destroyer_set.all():
+            if ship.strength > 0:
+                return True
+        for ship in self.frigate_set.all():
+            if ship.strength > 0:
+                return True
+        for ship in self.submarine_set.all():
+            if ship.strength > 0:
+                return True
+        return False

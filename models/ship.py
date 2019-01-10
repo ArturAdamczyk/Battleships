@@ -20,8 +20,8 @@ class Experience(ChoiceEnum):
 
 class ExperienceLevel(Enum):
     RECRUIT = 0
-    SOLDIER = 100
-    VETERAN = 250
+    SOLDIER = 50
+    VETERAN = 70
 
 
 class Ship(PolymorphicModel):
@@ -58,19 +58,17 @@ class Ship(PolymorphicModel):
 
     def next_level_ready(self) -> bool:
         if Experience(self.experience) == Experience.RECRUIT and self.experience_points >= ExperienceLevel.SOLDIER.value:
-            self.experience = Experience.SOLDIER
             return True
-        elif self.experience == Experience.SOLDIER and self.experience_points >= ExperienceLevel.RECRUIT.value:
-            self.experience = ExperienceLevel.VETERAN
+        elif Experience(self.experience) == Experience.SOLDIER and self.experience_points >= ExperienceLevel.VETERAN.value:
             return True
         else:
             return False
 
     def increase_experience_level(self):
-        if ExperienceLevel(self.experience) == ExperienceLevel.RECRUIT:
-            self.experience = ExperienceLevel.SOLDIER
-        elif ExperienceLevel(self.experience) == ExperienceLevel.SOLDIER:
-            self.experience = ExperienceLevel.VETERAN
+        if Experience(self.experience) == Experience.RECRUIT:
+            self.experience = Experience.SOLDIER.value
+        elif Experience(self.experience) == Experience.SOLDIER:
+            self.experience = Experience.VETERAN.value
         else:
             pass
 
