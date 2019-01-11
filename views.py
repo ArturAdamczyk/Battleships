@@ -5,24 +5,18 @@ from battleships.utils.test_data_set import TestDataSet
 from battleships.models.serializers import GameSerializer
 from battleships.models.game import FireMessage, InvalidMessage, MoveMessage, IdleMessage, Message, OutputMessage, MessageType
 from battleships.models.game_player import GamePlayer
-from django.http import HttpResponse, HttpRequest
-from django.core import serializers
+from django.http import HttpResponse
 from .forms import NewGameForm
-from django.shortcuts import render
 import json
 from django.views.generic.list import ListView
-from django.shortcuts import get_object_or_404
 from django.contrib.sites.shortcuts import get_current_site
 from django.core.exceptions import ObjectDoesNotExist
 from django.http import JsonResponse
-from django.contrib.auth import login, authenticate
 from django.shortcuts import render, redirect
 from django.contrib.auth import login, authenticate
 from battleships.forms import SignUpForm
-import jsonpickle
 import logging
 from django.views.decorators.csrf import csrf_exempt
-from channels import Group
 
 logger = logging.getLogger("battleships.views.py")
 
@@ -67,7 +61,7 @@ def new_game(request):
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         if form.is_valid():
-            game = Game(boardSize=40, max_players=2, name=request.POST['name'])
+            game = Game(boardSize=20, max_players=2, name=request.POST['name'])
             game.save()
             game_url = 'http://' + get_current_site(request).domain + '/game/' + str(game.id) + '/' + game.name.replace(" ", "_")
             response = {

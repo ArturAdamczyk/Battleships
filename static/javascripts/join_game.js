@@ -83,6 +83,7 @@ function insertChatMessage(message, hostMessage){
 function refreshUI(game){
     var userIndex = getUserIndex(game.gamePlayers);
     document.getElementById('title').innerHTML = renderStatus(game, userIndex);
+    document.getElementById('game_player').innerHTML = renderGamePlayer(game, userIndex);
     document.getElementById('game_fleet').innerHTML = "";
     renderFleet(
         game.gamePlayers[userIndex].carriers,
@@ -91,6 +92,10 @@ function refreshUI(game){
         game.gamePlayers[userIndex].destroyers);
     document.getElementById("game_title").innerHTML=renderTitle(game.name);
     document.getElementById("board").innerHTML=renderBoard(game);
+}
+
+function renderGamePlayer(game, userIndex){
+    return `<span class="avatar ${determineColor(getPlayerColor(userIndex + 1))}"></span>` + `<span class="game_player_name">${game.gamePlayers[userIndex].name}</span>`;
 }
 
 function renderStatus(game, userIndex){
@@ -121,6 +126,19 @@ function getUserIndex(gamePlayers){
   return counter;
 }
 
+function getPlayerColor(index){
+    switch(index){
+        case 1:
+            return colors.GREEN;
+        case 2:
+            return colors.ORANGE;
+        case 3:
+            return colors.RED;
+        case 4:
+            return colors.PURPLE;
+        }
+}
+
 function renderBoard(game){
   var board = [];
 
@@ -135,20 +153,7 @@ function renderBoard(game){
   var color = colors.BLUE;
 
     game.gamePlayers.forEach(function(gamePlayer) {
-        switch(gamePlayer.index){
-            case 1:
-                color = colors.GREEN;
-                break;
-            case 2:
-                color = colors.ORANGE;
-                break;
-            case 3:
-                color = colors.RED;
-                break;
-            case 4:
-                color = colors.PURPLE;
-                break;
-        }
+        color = getPlayerColor(gamePlayer.index);
         gamePlayer.carriers.forEach(function(carrier) {
             if(carrier.strength > 0){
                 carrier.coordinates.forEach(function(coordinate) {
