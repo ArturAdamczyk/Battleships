@@ -134,7 +134,7 @@ class OutputMessage:
 class Game(models.Model):
     MAX_DAMAGE = 10
 
-    winner = models.OneToOneField('GamePlayer', on_delete='cascade', default=None, blank=True, null=True)
+    winner = models.OneToOneField('GamePlayer', on_delete='cascade', default=None, blank=True, null=True, related_name="winner")
     name = models.CharField(max_length=200, default='')
     boardSize = models.IntegerField(default=20)
     finished = models.BooleanField(default=False)
@@ -282,7 +282,7 @@ class Game(models.Model):
             return False
 
     def is_game_finished(self)->bool:
-        return self.winner is None
+        return self.winner is not None
 
     def is_max_players(self)-> bool:
         if self.gameplayer_set.all().exists():
