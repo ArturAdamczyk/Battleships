@@ -1,7 +1,7 @@
 # Battleships
 Multiplayer battleships game.
 
-Created with Python 3.7.1 Django 2.1.4 + PostgreSQL 11.1 + JavaScript
+Created with Python 3.7.1 + Django 2.1.4 + PostgreSQL 11.1 + JavaScript
 
 Multiplayer ability is based on WebSocket concept (Django channels)
 
