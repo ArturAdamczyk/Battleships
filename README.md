@@ -34,24 +34,24 @@ msg message
 Setup:
 
 
-clone repository
-install python 3.7.1
-install postgreSQL
-install pgAdmin4
-launch pgadmin4 -> create new server -> create new db called battleships
-[*]
-open cmd in the cloned repo folder
-type: 
-install pip -r requirements.txt
-python manage.py makemigrations
-python manage.py migrate
-python manage.py runserver
+clone repository  
+install python 3.7.1  
+install postgreSQL  
+install pgAdmin4  
+launch pgadmin4 -> create new server -> create new db called battleships  
+[*]  
+open cmd in the cloned repo folder  
+type:  
+install pip -r requirements.txt  
+python manage.py makemigrations  
+python manage.py migrate  
+python manage.py runserver  
 
-your game is now available on 127.0.0.1:8000, enjoy!
+your game is now available on 127.0.0.1:8000, enjoy!  
 
-[*] installation of visual studio c++ build tools 2017 might be needed
-
-
+[*] installation of visual studio c++ build tools 2017 might be needed  
 
 
-#Work in progress...
+
+
+#Work in progress...  
