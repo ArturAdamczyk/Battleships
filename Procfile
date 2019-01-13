@@ -1,1 +1,1 @@
-web: gunicorn battleships.wsgi:application --log-file -
+web: gunicorn --pythonpath battleships battleships.wsgi:application
