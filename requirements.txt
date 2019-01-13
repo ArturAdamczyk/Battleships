@@ -44,3 +44,4 @@ virtualenv==16.1.0
 virtualenv-clone==0.4.0
 whitenoise==1.0.6
 zope.interface==4.6.0
+wsgiref==0.1.2
