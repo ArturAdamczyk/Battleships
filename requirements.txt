@@ -33,7 +33,6 @@ psycopg2==2.7.5
 psycopg2-binary==2.7.5
 pyflakes==0.8.1
 PyHamcrest==1.9.0
-pypiwin32==223
 pytz==2018.7
 redis==3.0.1
 requests==2.3.0
