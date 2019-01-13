@@ -61,7 +61,7 @@ def new_game(request):
     if request.method == 'POST':
         form = NewGameForm(request.POST)
         if form.is_valid():
-            game = Game(boardSize=20, max_players=2, name=request.POST['name'])
+            game = Game(boardSize=20, max_players=4, name=request.POST['name'])
             game.save()
             game_url = 'http://' + get_current_site(request).domain + '/game/' + str(game.id) + '/' + game.name.replace(" ", "_")
             response = {
