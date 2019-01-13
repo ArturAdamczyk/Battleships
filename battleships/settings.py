@@ -69,12 +69,32 @@ INSTALLED_APPS = [
     'battleships',
 ]
 
+#CHANNEL_LAYERS = {
+#    'default': {
+#        'BACKEND': 'asgiref.inmemory.ChannelLayer',
+#        'ROUTING': 'battleships.routing.channel_routing',
+#    },
+#}
+
 CHANNEL_LAYERS = {
-    'default': {
-        'BACKEND': 'asgiref.inmemory.ChannelLayer',
+    "default": {
+        "BACKEND": "channels_redis.core.RedisChannelLayer",
+        "CONFIG": {
+            "hosts": ["redis://h:p69877187246d4f0b36a94488814ee0b372234a2e943a61df0cdc84e4f85f35f2@ec2-34-254-133-4.eu-west-1.compute.amazonaws.com:26849"],
+        },
         'ROUTING': 'battleships.routing.channel_routing',
     },
 }
+
+#CHANNEL_LAYERS = {
+#    "default": {
+#        "BACKEND": "asgi_redis.RedisChannelLayer",
+#        "CONFIG": {
+#            "hosts": [os.environ.get('REDIS_URL', 'redis://localhost:6379')],
+#        },
+#        "ROUTING": "malang.routing.channel_routing",
+#    },
+#}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
