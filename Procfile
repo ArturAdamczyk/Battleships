@@ -1,1 +1,1 @@
-web: gunicorn battleships.wsgi --log-file=- -R
+web: gunicorn battleships.wsgi --log-file=- -R --preload
