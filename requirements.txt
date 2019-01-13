@@ -39,9 +39,9 @@ requests==2.3.0
 six==1.11.0
 SQLAlchemy==0.9.8
 static3==0.5.1
+Twisted==18.9.0
 txaio==18.8.1
 virtualenv==16.1.0
 virtualenv-clone==0.4.0
 whitenoise==1.0.6
 zope.interface==4.6.0
-wsgiref==0.1.2
