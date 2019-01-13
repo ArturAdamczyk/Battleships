@@ -1,1 +1,1 @@
-web: gunicorn battleships.wsgi --log-file
+web: gunicorn battleships.wsgi --log-file=- -R
