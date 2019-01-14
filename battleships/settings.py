@@ -80,9 +80,6 @@ CHANNEL_LAYERS = {
     "default": {
         #"BACKEND": "channels_redis.core.RedisChannelLayer",
         "BACKEND": "asgi_redis.RedisChannelLayer",
-        "CONFIG": {
-            "hosts": ['ec2-34-254-133-4.eu-west-1.compute.amazonaws.com:26849'],
-        },
         'ROUTING': 'battleships.routing.channel_routing',
     },
 }
