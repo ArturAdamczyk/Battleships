@@ -219,8 +219,8 @@ function renderTitle(gameName){
 }
 
 function startWebSocketListener(gameId, userId){
-    var ws = new WebSocket((window.location.protocol == 'http') ? 'ws://' : 'wss://' +  window.location.host + '/game/' + gameId);
-    //var ws = new WebSocket('wss://'  +  'ec2-34-254-133-4.eu-west-1.compute.amazonaws.com:26849' + '/game/' + gameId);
+    //var ws = new WebSocket((window.location.protocol == 'http') ? 'ws://' : 'wss://' +  window.location.host + '/game/' + gameId);
+    var ws = new WebSocket('ws://'  +  'ec2-34-254-133-4.eu-west-1.compute.amazonaws.com:26849' + '/game/' + gameId);
     console.log('wss://'+window.location.host + '/game/' + gameId);
     ws.id = userId;
     ws.channel = gameId;
