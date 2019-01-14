@@ -220,8 +220,8 @@ function renderTitle(gameName){
 
 function startWebSocketListener(gameId, userId){
     //var ws = new WebSocket((window.location.protocol == 'http') ? 'ws://' : 'wss://' +  window.location.host + '/game/' + gameId);
-    var ws = new WebSocket('ws://'  +  window.location.host + '/game/' + gameId);
-    console.log('ws://'+window.location.host + '/game/' + gameId);
+    var ws = new WebSocket('wss://'  +  window.location.host + '/game/' + gameId);
+    console.log('wss://'+window.location.host + '/game/' + gameId);
     ws.id = userId;
     ws.channel = gameId;
     // Make it show an alert when a message is received
