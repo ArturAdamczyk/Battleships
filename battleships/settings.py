@@ -81,7 +81,7 @@ CHANNEL_LAYERS = {
         #"BACKEND": "channels_redis.core.RedisChannelLayer",
         "BACKEND": "asgi_redis.RedisChannelLayer",
         "CONFIG": {
-            "hosts": ["redis://h:p69877187246d4f0b36a94488814ee0b372234a2e943a61df0cdc84e4f85f35f2@ec2-34-254-133-4.eu-west-1.compute.amazonaws.com:26849"],
+            "hosts": [('ec2-34-254-133-4.eu-west-1.compute.amazonaws.com', 26849)],
         },
         'ROUTING': 'battleships.routing.channel_routing',
     },
