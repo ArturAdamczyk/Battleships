@@ -42,7 +42,7 @@ launch pgadmin4 -> create new server -> create new db called battleships
 [*]  
 open cmd in the cloned repo folder  
 type:  
-install pip -r requirements.txt  
+install pip -r requirements_windows.txt  
 python manage.py makemigrations  
 python manage.py migrate  
 python manage.py runserver  
