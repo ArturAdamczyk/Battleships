@@ -107,6 +107,9 @@ function renderStatus(game, userIndex){
         GAME_FINISHED = true;
         return "<span class='status'>GAME OVER!</span>"
     }
+    if(game.gamePlayers.count == game.maxPlayers){
+        return "<span class='status'>Waiting for players to join...!</span>"
+    }
     if(game.gamePlayers[userIndex].inControl){
         return "<span class='status'>PLAY!</span>";
     }else{
@@ -116,11 +119,15 @@ function renderStatus(game, userIndex){
 
 function getUserIndex(gamePlayers){
   var counter = 0;
-  gamePlayers.every(gamePlayer =>{
-      if(parseInt(gamePlayer.player) == parseInt(user_id)){
-          return;
-      }else{
-          counter++;
+  var userFound = false;
+  gamePlayers.forEach(gamePlayer =>{
+      console.log(gamePlayer.player);
+      if(!userFound){
+          if(parseInt(gamePlayer.player) === parseInt(user_id)){
+            userFound = true
+          }else{
+            counter++;
+          }
       }
   });
   return counter;
@@ -230,17 +237,20 @@ function startWebSocketListener(gameId, userId){
       console.log('WS' + this.id + ': ' + message.data);
       //insertChatMessage('W' + this.id + ': ' + message.data, false);
       let webSocketMessage = parseWebSocketMessage(message.data);
-      if(webSocketMessage.type == MESSAGE_TYPE.INFO){
-          insertChatMessage(webSocketMessage.author + " " + webSocketMessage.rawMessage, false);
-      }else {
-          console.log(webSocketMessage.gameMessage.receiver.toString());
-          console.log(user_id.toString());
-          if(webSocketMessage.gameMessage.receiver == user_id.toString()){
-              insertChatMessage("Game: " + webSocketMessage.gameMessage.message, false);
-          }else{
-              insertChatMessage(webSocketMessage.author + " " + webSocketMessage.gameMessage.message, false);
+      if(webSocketMessage.gameMessage.message_type != "MESSAGE"){
+          if(webSocketMessage.type == MESSAGE_TYPE.INFO){
+              insertChatMessage(webSocketMessage.author + " " + webSocketMessage.rawMessage, false);
+          }else {
+              console.log(webSocketMessage.gameMessage.receiver.toString());
+              console.log(user_id.toString());
+              if(webSocketMessage.gameMessage.receiver == user_id.toString()){
+                  insertChatMessage("Game: " + webSocketMessage.gameMessage.message, false);
+              }else{
+                  insertChatMessage(webSocketMessage.author + " " + webSocketMessage.gameMessage.message, false);
+              }
           }
       }
+
       scrollBottom(document.getElementById("chatbox"));
       refreshGame();
     };
@@ -378,7 +388,7 @@ Game.fromJson = function (json){
 
 
 class GamePlayer{
-    constructor(id, name, player, index, lost, ready, inControl, carriers, frigates, submarines, destroyers){
+    constructor(id, name, player, index, lost, ready, inControl, createdAt, carriers, frigates, submarines, destroyers){
         this.id = id;
         this.name = name;
         this.player = player;
@@ -390,6 +400,7 @@ class GamePlayer{
         this.frigates = frigates;
         this.submarines = submarines;
         this.destroyers = destroyers;
+        this.createdAt = createdAt;
     }
 }
 
@@ -411,7 +422,7 @@ GamePlayer.fromJson = function (obj){
     obj.destroyer_set.forEach(function(destroyer) {
         destroyers.push(Ship.fromJson(destroyer))
     });
-    return new GamePlayer(obj.id, obj.game_nick, obj.player, obj.index, obj.lost, obj.ready, obj.inControl, carriers, frigates, submarines, destroyers);
+    return new GamePlayer(obj.id, obj.game_nick, obj.player, obj.index, obj.lost, obj.ready, obj.inControl, obj.created_at, carriers, frigates, submarines, destroyers);
 };
 
 

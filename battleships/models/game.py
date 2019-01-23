@@ -35,8 +35,7 @@ class Message:
         return json.dumps(self, default=lambda o: o.__dict__, sort_keys=True, indent=4)
 
     def get_text(self):
-        # return self.text
-        pass
+        return self.text
 
 
 class FireMessage(Message):

@@ -28,6 +28,7 @@ SECRET_KEY = 'pirr$3kr2$4=(b!erdanmuiy*&%_z#xeijsi0m_scy4d!nf+$5'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
+# put here ip of server machine
 ALLOWED_HOSTS = []
 
 ASGI_APPLICATION = 'battleships.routing.application'
