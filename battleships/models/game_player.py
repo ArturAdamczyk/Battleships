@@ -11,8 +11,12 @@ class GamePlayer(models.Model):
     lost = models.BooleanField(default=False)
     inControl = models.BooleanField(default=False)
     index = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
     player = models.ForeignKey(Player, on_delete=models.CASCADE)
     game = models.ForeignKey(to='Game', on_delete=models.CASCADE)
+
+    class Meta:
+        ordering = ('created_at',)
 
     def find_ship(self, name)-> Ship:
         #could also be:
