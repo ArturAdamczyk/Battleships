@@ -38,20 +38,24 @@ clone repository
 install python 3.7.1  
 install postgreSQL  
 install pgAdmin4  
-launch pgadmin4 -> create new server -> create new db called battleships  
-[*]  
-open cmd in the cloned repo folder  
+launch pgadmin4 -> create new server -> create new db called battleships   
+*open cmd in the cloned repo folder  
 type:  
 pip install -r requirements_windows.txt  
 python manage.py makemigrations  
 python manage.py migrate  
 python manage.py runserver  
 
-your game is now available on 127.0.0.1:8000, enjoy!  
-
-[*] installation of visual studio c++ build tools 2017 might be needed  
+your game is now available on 127.0.0.1:8000, enjoy!**
 
 
 
+* installation of visual studio c++ build tools 2017 might be needed  
+** The easiest way to setup a multiplayer game is to expose the newly created server using ngrok.com
+Remember to put the servers public address into ALLOWED_HOST array in settings.py
 
-#Work in progress...  
+
+Future changes:
+- heroku deployment
+- client side refactor
+- responsive ui
