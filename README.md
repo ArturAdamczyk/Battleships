@@ -50,12 +50,14 @@ your game is now available on 127.0.0.1:8000, enjoy!**
 
 
 
-* installation of visual studio c++ build tools 2017 might be needed  
-** The easiest way to setup a multiplayer game is to expose the newly created server using ngrok.com
+*installation of visual studio c++ build tools 2017 might be needed  
+**The easiest way to setup a multiplayer game is to expose the newly created server using ngrok.com
 Remember to put the servers public address into ALLOWED_HOST array in settings.py
 
 
-Future changes:
+
+
+To be done:
 - heroku deployment
 - client side refactor
 - responsive ui
